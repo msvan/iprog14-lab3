@@ -7,6 +7,9 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.ArrayList;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -19,19 +22,23 @@ import javax.swing.SpinnerNumberModel;
 import se.kth.csc.iprog.dinnerplanner.model.DinnerModel;
 import se.kth.csc.iprog.dinnerplanner.model.Dish;
 
-public class SelectionView extends Container {
+public class SelectionView extends Container implements Observer {
 	private static final long serialVersionUID = 1L;
 
 	private Dimension dimension = new Dimension(300, 380);
 	public JPanel dishSelection;
+	public ArrayList<SelectedDishListView> selectedDishListView;
 	public JSpinner numberOfGuestsSpinner;
 	public JButton preparationButton;
 	public JButton ingredientsButton;
+	private JLabel menuPrice;
 
 	public SelectionView(DinnerModel model) {
 		setLayout(new GridBagLayout());
 		setPreferredSize(dimension);
 
+		selectedDishListView = new ArrayList<SelectedDishListView>();
+		
 		GridBagConstraints gbc = new GridBagConstraints();
 		gbc.anchor = GridBagConstraints.CENTER;
 		gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -56,7 +63,7 @@ public class SelectionView extends Container {
 		gbc.gridx = 0;
 		gbc.gridy = 1;
 		add(totalCost, gbc);
-		JLabel menuPrice = new JLabel("$ " + model.getTotalMenuPrice());
+		menuPrice = new JLabel("$ " + model.getTotalMenuPrice());
 		gbc.gridx = 1;
 		gbc.gridy = 1;
 		add(menuPrice, gbc);
@@ -94,13 +101,29 @@ public class SelectionView extends Container {
 		gbc.gridy = 4;
 		gbc.gridwidth = GridBagConstraints.RELATIVE;
 		add(ingredientsButton, gbc);
+		
+		// Add observer.
+		model.addObserver(this);
+	}
+	
+	@Override
+	public void update(Observable om, Object argument) {
+		DinnerModel model = (DinnerModel) om;
+		if (argument.equals("numberOfGuests") || argument.equals("dishSelection")) {
+			menuPrice.setText("$ " + model.getTotalMenuPrice());
+		}
+		if (argument.equals("dishSelection")) {
+			setSelection(model);
+		}
 	}
 
 	private void setSelection(DinnerModel model) {
+		selectedDishListView.clear();
 		dishSelection.removeAll();
-		// For each selected dish, create a selected dist list view.
+		// For each selected dish, create a selected dish list view.
 		for (Dish d : model.getFullMenu()) {
 			SelectedDishListView ddv = new SelectedDishListView(d);
+			selectedDishListView.add(ddv);
 			dishSelection.add(ddv);
 		}
 		dishSelection.updateUI();
@@ -110,6 +133,7 @@ public class SelectionView extends Container {
 
 		private static final long serialVersionUID = 1L;
 		public Dish dish;
+		public JButton deleteButton;
 
 		public SelectedDishListView(Dish dish) {
 			this.dish = dish;
@@ -148,7 +172,7 @@ public class SelectionView extends Container {
 			add(costLabel, gbc);
 
 			// Create the delete button.
-			JButton deleteButton = new JButton("X");
+			deleteButton = new JButton("X");
 			gbc.gridx = 2;
 			gbc.gridy = 0;
 			gbc.gridheight = 1;

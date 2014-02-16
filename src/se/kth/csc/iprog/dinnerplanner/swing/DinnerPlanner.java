@@ -3,6 +3,7 @@ package se.kth.csc.iprog.dinnerplanner.swing;
 import javax.swing.JFrame;
 
 import se.kth.csc.iprog.dinnerplanner.model.*;
+import se.kth.csc.iprog.dinnerplanner.swing.controller.MainViewController;
 import se.kth.csc.iprog.dinnerplanner.swing.view.*;
 
 
@@ -31,6 +32,9 @@ public class DinnerPlanner extends JFrame {
 		
 		//Creating the first view
 		MainView mainView = new MainView(dinnerPlanner.getModel());
+		
+		// Create the main controller.
+		new MainViewController(dinnerPlanner.getModel(), mainView);
 		
 		//Adding the view to the main JFrame
 		dinnerPlanner.getContentPane().add(mainView);

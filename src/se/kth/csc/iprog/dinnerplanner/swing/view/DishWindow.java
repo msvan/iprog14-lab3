@@ -6,6 +6,8 @@ import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
+import java.util.Observable;
+import java.util.Observer;
 
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -16,10 +18,15 @@ import javax.swing.JTextArea;
 import se.kth.csc.iprog.dinnerplanner.model.DinnerModel;
 import se.kth.csc.iprog.dinnerplanner.model.Dish;
 
-public class DishWindow extends JFrame {
+public class DishWindow extends JFrame implements Observer {
 	private static final long serialVersionUID = 1L;
+	
+	private JLabel dishPrice;
+	private Dish dish;
 
 	public DishWindow(DinnerModel model, Dish dish) {
+		this.dish = dish;
+		
 		Dimension dimension = new Dimension(555, 400);
 		setPreferredSize(dimension);
 		setTitle("Dinner Planner - " + dish.getName());
@@ -48,14 +55,13 @@ public class DishWindow extends JFrame {
 		view.add(dishName, gbc);
 
 		// Create the price label and add it below the dish name.
-		int numberOfGuests = model.getNumberOfGuests();
-		float totalPrice = dish.getTotalPrice() * numberOfGuests;
-		JLabel dishPrice = new JLabel("$ " + totalPrice + " for " + numberOfGuests + " persons");
+		dishPrice = new JLabel();
 		dishPrice.setHorizontalAlignment(JLabel.LEFT);
 		dishPrice.setAlignmentX(Component.LEFT_ALIGNMENT);		
 		gbc.gridx = 1;
 		gbc.gridy = 1;
 		view.add(dishPrice, gbc);
+		updateDishPrice(dish.getTotalPrice(), model.getNumberOfGuests());
 
 		// Create the textarea and add it to the left of ingredients list.
 		JTextArea textArea = new JTextArea(dish.getDescription());
@@ -77,6 +83,19 @@ public class DishWindow extends JFrame {
 		gbc.gridy = 2;
 		view.add(ingredientsListView, gbc);
 
+		model.addObserver(this);
 		setContentPane(view);
+	}
+
+	@Override
+	public void update(Observable om, Object argument) {
+		DinnerModel model = (DinnerModel) om;
+		if (argument.equals("numberOfGuests") || argument.equals("dishSelection")) {
+			updateDishPrice(dish.getTotalPrice(), model.getNumberOfGuests());
+		}
+	}
+	
+	private void updateDishPrice(float price, int numberOfGuests) {
+		dishPrice.setText("$ " + price * numberOfGuests + " for " + numberOfGuests + " persons");
 	}
 }
